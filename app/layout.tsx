@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     "Cyber-military productivity command center for engineering students preparing for B.Tech S4 exams.",
   applicationName: "LOCKIN",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+    shortcut: "/icon.png",
+  },
   keywords: [
     "study tracker",
     "engineering students",

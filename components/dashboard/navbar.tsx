@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, LogOut, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
@@ -14,7 +15,7 @@ export function Navbar({ username, onSignOut }: NavbarProps) {
             <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
                 <div className="flex items-center gap-3">
                     <div className="neon-ring grid h-10 w-10 place-items-center rounded-md border border-line-strong bg-black">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
+                        <Image src="/icon.png" alt="LOCKIN logo" width={24} height={24} className="h-6 w-6" priority />
                     </div>
                     <div>
                         <p className="font-heading text-xl tracking-[0.22em] text-primary">LOCKIN</p>
