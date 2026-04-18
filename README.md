@@ -142,6 +142,8 @@ utils/supabase/      # Supabase clients
 ├── server.ts        # Server-side client
 └── middleware.ts    # Auth middleware
 
+proxy.ts             # Next.js request proxy (replaces middleware.ts convention)
+
 supabase/
 └── schema.sql       # Database schema, RLS, functions
 
