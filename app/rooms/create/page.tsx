@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { CreateRoomForm } from "@/components/rooms/create-room-form";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function CreateRoomPage() {
+    await connection();
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     const {
