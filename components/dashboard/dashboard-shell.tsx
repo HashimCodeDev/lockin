@@ -80,7 +80,7 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
             <Navbar username={profile?.username ?? "Cadet"} onSignOut={onSignOut} />
             <CountdownHeader />
 
-            <main className="mx-auto flex w-full max-w-[1600px] gap-4 px-4 py-4 sm:px-6">
+            <main className="mx-auto flex w-full max-w-400 gap-4 px-4 py-4 sm:px-6">
                 <SubjectNavigator selected={selectedSubject} onSelect={setSelectedSubject} />
 
                 <section className="flex-1 space-y-4">
@@ -115,7 +115,7 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
                     )}
                 </section>
 
-                <aside className="hidden w-[350px] shrink-0 space-y-4 xl:block">
+                <aside className="hidden w-87.5 shrink-0 space-y-4 xl:block">
                     <LeaderboardCard rows={data.leaderboard} currentUserId={currentUserId} />
                     <GamificationPanel
                         totalXp={profile?.total_xp ?? 0}

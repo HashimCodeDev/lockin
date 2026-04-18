@@ -14,7 +14,7 @@ export function SubjectNavigator({ selected, onSelect }: SubjectNavigatorProps) 
     return (
         <>
             <aside className="hidden w-64 shrink-0 lg:block">
-                <div className="glass sticky top-[220px] rounded-xl p-3">
+                <div className="glass sticky top-55 rounded-xl p-3">
                     <p className="mb-2 px-2 text-xs uppercase tracking-[0.22em] text-muted">Subjects</p>
                     <div className="space-y-2">
                         {SUBJECTS.map((subject) => (

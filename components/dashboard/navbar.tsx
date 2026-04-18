@@ -12,7 +12,7 @@ interface NavbarProps {
 export function Navbar({ username, onSignOut }: NavbarProps) {
     return (
         <header className="sticky top-0 z-40 border-b border-line/80 bg-background/90 backdrop-blur-lg">
-            <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
+            <div className="mx-auto flex w-full max-w-400 items-center justify-between gap-3 px-4 py-3 sm:px-6">
                 <div className="flex items-center gap-3">
                     <div className="neon-ring grid h-10 w-10 place-items-center rounded-md border border-line-strong bg-black">
                         <Image src="/icon.png" alt="LOCKIN logo" width={24} height={24} className="h-6 w-6" priority />

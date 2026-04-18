@@ -176,7 +176,7 @@ export function LiveStudyTracker({ selectedSubject, onRefresh, activeUsers }: Li
                 </CardContent>
             </Card>
 
-            <div className="fixed inset-x-0 bottom-[74px] z-40 border-y border-line bg-background/95 p-3 backdrop-blur lg:hidden">
+            <div className="fixed inset-x-0 bottom-18.5 z-40 border-y border-line bg-background/95 p-3 backdrop-blur lg:hidden">
                 <div className="mx-auto flex max-w-md items-center justify-between">
                     <div>
                         <p className="text-[11px] uppercase tracking-wider text-muted">Live Session</p>

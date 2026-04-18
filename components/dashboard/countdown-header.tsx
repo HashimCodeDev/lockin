@@ -6,7 +6,7 @@ import { useCountdown } from "@/hooks/use-countdown";
 
 function TimeCell({ label, value }: { label: string; value: number }) {
     return (
-        <div className="flex min-w-[72px] flex-col items-center rounded-lg border border-line bg-card p-2">
+        <div className="flex min-w-18 flex-col items-center rounded-lg border border-line bg-card p-2">
             <span className="font-heading text-2xl text-primary sm:text-3xl">{value.toString().padStart(2, "0")}</span>
             <span className="text-[10px] uppercase tracking-wide text-muted">{label}</span>
         </div>
@@ -17,8 +17,8 @@ export function CountdownHeader() {
     const { days, hours, minutes, seconds, isUrgent } = useCountdown(EXAM_DATE);
 
     return (
-        <section className="sticky top-[61px] z-30 border-b border-line bg-background/95 py-3 backdrop-blur">
-            <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-4 sm:px-6">
+        <section className="sticky top-15.25 z-30 border-b border-line bg-background/95 py-3 backdrop-blur">
+            <div className="mx-auto flex w-full max-w-400 flex-col gap-3 px-4 sm:px-6">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted sm:text-sm">
                         <Timer className="h-4 w-4 text-primary" />
