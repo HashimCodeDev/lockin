@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { InvitePanel, type InviteRecord } from "@/components/rooms/invite-panel";
 import { createClient } from "@/utils/supabase/server";
 
@@ -28,9 +29,17 @@ interface InvitePageProps {
     params: Promise<{ slug: string }>;
 }
 
-export default async function RoomInvitePage({ params }: InvitePageProps) {
-    const { slug } = await params;
+export default function RoomInvitePage({ params }: InvitePageProps) {
+    return (
+        <Suspense fallback={<main className="mx-auto w-full max-w-3xl p-4 text-sm text-muted sm:p-6">Loading invites...</main>}>
+            <RoomInviteContent params={params} />
+        </Suspense>
+    );
+}
+
+async function RoomInviteContent({ params }: InvitePageProps) {
     await connection();
+    const { slug } = await params;
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 

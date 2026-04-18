@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { createClient } from "@/utils/supabase/server";
 
 interface RoomSettingsRelation {
@@ -29,9 +30,17 @@ interface RoomSettingsPageProps {
     params: Promise<{ slug: string }>;
 }
 
-export default async function RoomSettingsPage({ params }: RoomSettingsPageProps) {
-    const { slug } = await params;
+export default function RoomSettingsPage({ params }: RoomSettingsPageProps) {
+    return (
+        <Suspense fallback={<main className="mx-auto w-full max-w-3xl p-4 text-sm text-muted sm:p-6">Loading room settings...</main>}>
+            <RoomSettingsContent params={params} />
+        </Suspense>
+    );
+}
+
+async function RoomSettingsContent({ params }: RoomSettingsPageProps) {
     await connection();
+    const { slug } = await params;
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 

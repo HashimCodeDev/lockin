@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 export default function JoinRoomPage() {
+    return (
+        <Suspense
+            fallback={(
+                <main className="grid min-h-screen place-items-center p-4">
+                    <Card className="w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle>Join Room</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted">Loading invite details...</p>
+                        </CardContent>
+                    </Card>
+                </main>
+            )}
+        >
+            <JoinRoomContent />
+        </Suspense>
+    );
+}
+
+function JoinRoomContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [code, setCode] = useState(searchParams.get("code") ?? "");

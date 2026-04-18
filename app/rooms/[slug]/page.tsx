@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SWRegister } from "@/components/providers/sw-register";
 import { getDashboardData, isRoomAccessError } from "@/lib/dashboard-data";
@@ -11,9 +12,17 @@ interface RoomPageProps {
     params: Promise<{ slug: string }>;
 }
 
-export default async function RoomDashboardPage({ params }: RoomPageProps) {
-    const { slug } = await params;
+export default function RoomDashboardPage({ params }: RoomPageProps) {
+    return (
+        <Suspense fallback={<main className="mx-auto grid min-h-screen w-full max-w-2xl place-items-center p-6 text-sm text-muted">Loading room dashboard...</main>}>
+            <RoomDashboardContent params={params} />
+        </Suspense>
+    );
+}
+
+async function RoomDashboardContent({ params }: RoomPageProps) {
     await connection();
+    const { slug } = await params;
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 

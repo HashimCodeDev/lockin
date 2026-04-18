@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { SubjectManager } from "@/components/rooms/subject-manager";
 import { createClient } from "@/utils/supabase/server";
 import type { Subject } from "@/types/app";
@@ -28,9 +29,17 @@ interface SubjectsPageProps {
     params: Promise<{ slug: string }>;
 }
 
-export default async function RoomSubjectsPage({ params }: SubjectsPageProps) {
-    const { slug } = await params;
+export default function RoomSubjectsPage({ params }: SubjectsPageProps) {
+    return (
+        <Suspense fallback={<main className="mx-auto w-full max-w-4xl p-4 text-sm text-muted sm:p-6">Loading subjects...</main>}>
+            <RoomSubjectsContent params={params} />
+        </Suspense>
+    );
+}
+
+async function RoomSubjectsContent({ params }: SubjectsPageProps) {
     await connection();
+    const { slug } = await params;
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
