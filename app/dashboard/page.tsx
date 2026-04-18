@@ -4,7 +4,7 @@ import { getPrimaryRoomSlug } from "@/lib/dashboard-data";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/utils/supabase/server";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = false;
 
 export default async function DashboardPage() {
     if (!isSupabaseConfigured()) {
