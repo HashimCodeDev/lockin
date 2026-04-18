@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
 interface RoomSettingsRelation {
@@ -30,6 +31,7 @@ interface RoomSettingsPageProps {
 
 export default async function RoomSettingsPage({ params }: RoomSettingsPageProps) {
     const { slug } = await params;
+    await connection();
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 

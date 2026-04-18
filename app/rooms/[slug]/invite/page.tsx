@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { InvitePanel, type InviteRecord } from "@/components/rooms/invite-panel";
 import { createClient } from "@/utils/supabase/server";
 
@@ -29,6 +30,7 @@ interface InvitePageProps {
 
 export default async function RoomInvitePage({ params }: InvitePageProps) {
     const { slug } = await params;
+    await connection();
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 

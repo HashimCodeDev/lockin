@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { SubjectManager } from "@/components/rooms/subject-manager";
 import { createClient } from "@/utils/supabase/server";
 import type { Subject } from "@/types/app";
@@ -29,6 +30,7 @@ interface SubjectsPageProps {
 
 export default async function RoomSubjectsPage({ params }: SubjectsPageProps) {
     const { slug } = await params;
+    await connection();
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
