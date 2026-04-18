@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
 
 export function Progress({ value, className }: { value: number; className?: string }) {
-  const safeValue = Math.max(0, Math.min(100, value));
+    const safeValue = Math.max(0, Math.min(100, value));
 
-  return (
-    <div className={cn("relative h-2 w-full overflow-hidden rounded-full bg-card-2", className)}>
-      <div
-        className="h-full rounded-full bg-primary transition-all"
-        style={{ width: `${safeValue}%` }}
-      />
-    </div>
-  );
+    return (
+        <div className={cn("relative h-2 w-full overflow-hidden rounded-full bg-card-2", className)}>
+            <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${safeValue}%` }}
+            />
+        </div>
+    );
 }

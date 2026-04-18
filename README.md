@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LOCKIN
 
-## Getting Started
+Premium cyber-military study command center for engineering students preparing for April 2026 B.Tech S4 exams.
 
-First, run the development server:
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS v4
+- shadcn-style reusable UI primitives
+- Lucide React icons
+- Supabase (Auth, PostgreSQL, Realtime Presence, Storage)
+- Vercel-ready deployment
+- pnpm package manager
+
+## Install Commands (pnpm only)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If you need to re-add dependencies manually:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm add @supabase/ssr @supabase/supabase-js class-variance-authority clsx date-fns framer-motion lucide-react recharts sonner tailwind-merge zod
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment
 
-## Learn More
+Copy `.env.example` into `.env.local` and set values.
 
-To learn more about Next.js, take a look at the following resources:
+## Supabase Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in Supabase SQL Editor.
+3. Verify storage bucket `materials` exists.
+4. Enable email authentication in Supabase Auth.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+```bash
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+pnpm typecheck
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Phase Delivery Map
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Phase 1
+
+- Folder architecture: `app`, `components`, `lib`, `hooks`, `types`, `supabase`, `public`
+- Global cyber-military design tokens in `app/globals.css`
+- Main app shell with sticky navbar and responsive subject navigator
+
+### Phase 2
+
+- Live stopwatch tracker with start/pause/resume/stop
+- Weekly leaderboard with rank titles
+- Sticky exam countdown with urgency mode
+- Analytics charts and progress cards
+
+### Phase 3
+
+- Supabase SQL schema + RLS + leaderboard view + XP RPC
+- Auth pages (`/sign-in`, `/sign-up`)
+- Protected `/dashboard` route
+- Realtime active users via Supabase Presence
+
+### Phase 4
+
+- The Vault upload system with drag/drop
+- Type + size validation and low-storage controls
+- Duplicate checks + upload API rate limiting
+- Search and subject/type filtering
+
+### Phase 5
+
+- UI polish and mobile bottom navigation
+- PWA manifest + service worker registration
+- SEO basics (`robots`, `sitemap`)
+- Deployment-ready configuration for Vercel
+
+## Deploy to Vercel
+
+1. Push repository to GitHub.
+2. Import project into Vercel.
+3. Set environment variables from `.env.local`.
+4. Deploy with default Next.js build command.
+
+## Notes
+
+- Storage policies enforce ownership for delete access.
+- Uploads are limited to 25MB and approved file types only.
+- For best mobile performance, keep chart datasets bounded to recent windows.
