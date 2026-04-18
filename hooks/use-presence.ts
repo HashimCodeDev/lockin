@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
 export function usePresence(userId?: string) {
     const [activeUsers, setActiveUsers] = useState(0);

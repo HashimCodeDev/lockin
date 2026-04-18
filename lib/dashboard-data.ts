@@ -1,9 +1,11 @@
 import { startOfDay, subDays } from "date-fns";
-import { createClient } from "@/supabase/server";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 import type { DashboardData, LeaderboardEntry } from "@/types/dashboard";
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
     const thirtyDaysAgo = subDays(startOfDay(new Date()), 30).toISOString();
     const weekAgo = subDays(startOfDay(new Date()), 7).toISOString();
 

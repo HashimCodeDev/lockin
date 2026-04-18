@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { SUBJECTS } from "@/lib/constants";
 import { studySessionSchema } from "@/lib/validation";
 import { useStopwatch } from "@/hooks/use-stopwatch";
-import { createClient } from "@/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import type { SubjectCode } from "@/types/app";
 
 const XP_PER_MINUTE = 2;

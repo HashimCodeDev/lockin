@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { uploadMetadataSchema } from "@/lib/validation";
-import { createClient } from "@/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 
 const uploadWindow = new Map<string, { count: number; startedAt: number }>();
 const LIMIT_PER_MINUTE = 12;
@@ -24,7 +25,8 @@ function isRateLimited(userId: string) {
 }
 
 async function requireUser() {
-    const supabase = await createClient();
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
     const {
         data: { user },
     } = await supabase.auth.getUser();

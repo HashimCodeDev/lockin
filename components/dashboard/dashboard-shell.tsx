@@ -18,7 +18,7 @@ import { GamificationPanel } from "@/components/dashboard/gamification-panel";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { SUBJECTS } from "@/lib/constants";
 import { usePresence } from "@/hooks/use-presence";
-import { createClient } from "@/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import type { SubjectCode } from "@/types/app";
 import type { DashboardData } from "@/types/dashboard";
 

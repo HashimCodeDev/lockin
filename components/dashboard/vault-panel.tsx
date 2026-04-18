@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { SUBJECTS, STORAGE_QUOTA_BYTES } from "@/lib/constants";
 import { compressImageIfNeeded, hashFile, validateFileTypeAndSize } from "@/lib/upload-utils";
-import { createClient } from "@/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import type { Material, SubjectCode } from "@/types/app";
 
 interface VaultPanelProps {

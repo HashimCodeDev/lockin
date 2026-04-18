@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
 interface AuthFormProps {
     mode: "sign-in" | "sign-up";
