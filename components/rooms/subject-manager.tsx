@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ interface SubjectManagerProps {
     slug: string;
     role: RoomRole;
     roomName: string;
+    initialSubjects: Subject[];
 }
 
 type DraftSubject = {
@@ -23,9 +24,9 @@ type DraftSubject = {
     sort_order: number;
 };
 
-export function SubjectManager({ slug, role, roomName }: SubjectManagerProps) {
+export function SubjectManager({ slug, role, roomName, initialSubjects }: SubjectManagerProps) {
     const canManage = role === "owner" || role === "admin";
-    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [subjects, setSubjects] = useState<Subject[]>(initialSubjects);
     const [draft, setDraft] = useState<DraftSubject>({
         name: "",
         code: "",
@@ -33,7 +34,7 @@ export function SubjectManager({ slug, role, roomName }: SubjectManagerProps) {
         icon: "",
         sort_order: 0,
     });
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     const loadSubjects = async () => {
         setIsLoading(true);
@@ -49,10 +50,6 @@ export function SubjectManager({ slug, role, roomName }: SubjectManagerProps) {
             setIsLoading(false);
         }
     };
-
-    useEffect(() => {
-        void loadSubjects();
-    }, [slug]);
 
     const nextSortOrder = useMemo(() => Math.max(...subjects.map((subject) => subject.sort_order), -1) + 1, [subjects]);
 

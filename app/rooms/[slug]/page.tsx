@@ -23,15 +23,10 @@ export default async function RoomDashboardPage({ params }: RoomPageProps) {
         redirect("/sign-in");
     }
 
-    try {
-        const data = await getDashboardData(user.id, slug);
+    let data;
 
-        return (
-            <>
-                <SWRegister />
-                <DashboardShell data={data} currentUserId={user.id} />
-            </>
-        );
+    try {
+        data = await getDashboardData(user.id, slug);
     } catch (error) {
         if (isRoomAccessError(error)) {
             return (
@@ -56,4 +51,11 @@ export default async function RoomDashboardPage({ params }: RoomPageProps) {
 
         throw error;
     }
+
+    return (
+        <>
+            <SWRegister />
+            <DashboardShell data={data} currentUserId={user.id} />
+        </>
+    );
 }

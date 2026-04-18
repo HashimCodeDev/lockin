@@ -3,6 +3,9 @@
 import { AlertTriangle, Timer } from "lucide-react";
 import { useCountdown } from "@/hooks/use-countdown";
 
+const THIRTY_DAYS_IN_MS = 30 * 24 * 60 * 60 * 1000;
+const DEFAULT_COUNTDOWN_TARGET = new Date(Date.now() + THIRTY_DAYS_IN_MS).toISOString();
+
 function TimeCell({ label, value }: { label: string; value: number }) {
     return (
         <div className="flex min-w-18 flex-col items-center rounded-lg border border-line bg-card p-2">
@@ -18,7 +21,7 @@ interface CountdownHeaderProps {
 }
 
 export function CountdownHeader({ examDate, roomName }: CountdownHeaderProps) {
-    const targetDate = examDate ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const targetDate = examDate ?? DEFAULT_COUNTDOWN_TARGET;
     const { days, hours, minutes, seconds, isUrgent } = useCountdown(targetDate);
 
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Play, Pause, Square, ShieldAlert, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,22 +17,18 @@ interface LiveStudyTrackerProps {
     roomId: string;
     subjects: Subject[];
     selectedSubjectId: string | null;
+    onSubjectChange: (subjectId: string | null) => void;
     onRefresh: () => Promise<void>;
     activeUsers: number;
 }
 
-export function LiveStudyTracker({ roomId, subjects, selectedSubjectId, onRefresh, activeUsers }: LiveStudyTrackerProps) {
+export function LiveStudyTracker({ roomId, subjects, selectedSubjectId, onSubjectChange, onRefresh, activeUsers }: LiveStudyTrackerProps) {
     const timer = useStopwatch();
     const [notes, setNotes] = useState("");
     const [goal, setGoal] = useState("");
-    const [subjectId, setSubjectId] = useState<string | null>(selectedSubjectId);
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        setSubjectId(selectedSubjectId);
-    }, [selectedSubjectId]);
-
-    const isValidSubject = !subjectId || subjects.some((item) => item.id === subjectId);
+    const isValidSubject = !selectedSubjectId || subjects.some((item) => item.id === selectedSubjectId);
     const expectedXp = useMemo(
         () => Math.floor(timer.elapsedMs / 1000 / 60) * XP_PER_MINUTE,
         [timer.elapsedMs],
@@ -44,7 +40,7 @@ export function LiveStudyTracker({ roomId, subjects, selectedSubjectId, onRefres
         const minutes = Math.max(1, Math.round(timer.stop() / 1000 / 60));
         const parsed = studySessionSchema.safeParse({
             room_id: roomId,
-            subject_id: subjectId,
+            subject_id: selectedSubjectId,
             duration_minutes: minutes,
             notes,
             goal,
@@ -121,8 +117,8 @@ export function LiveStudyTracker({ roomId, subjects, selectedSubjectId, onRefres
                         <label className="space-y-1">
                             <span className="text-xs uppercase tracking-wide text-muted">Subject</span>
                             <select
-                                value={subjectId ?? ""}
-                                onChange={(event) => setSubjectId(event.target.value || null)}
+                                value={selectedSubjectId ?? ""}
+                                onChange={(event) => onSubjectChange(event.target.value || null)}
                                 className="h-10 w-full rounded-lg border border-line bg-black/40 px-3 text-sm"
                             >
                                 <option value="">Uncategorized</option>

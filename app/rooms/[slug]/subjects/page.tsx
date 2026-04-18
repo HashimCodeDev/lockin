@@ -2,6 +2,26 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SubjectManager } from "@/components/rooms/subject-manager";
 import { createClient } from "@/utils/supabase/server";
+import type { Subject } from "@/types/app";
+
+interface RoomSubjectsRelation {
+    id: string;
+    slug: string;
+    name: string;
+}
+
+interface RoomSubjectsMembership {
+    role: "owner" | "admin" | "member";
+    rooms: RoomSubjectsRelation | RoomSubjectsRelation[] | null;
+}
+
+function getRelation<T>(value: T | T[] | null | undefined): T | null {
+    if (Array.isArray(value)) {
+        return value[0] ?? null;
+    }
+
+    return value ?? null;
+}
 
 interface SubjectsPageProps {
     params: Promise<{ slug: string }>;
@@ -20,22 +40,41 @@ export default async function RoomSubjectsPage({ params }: SubjectsPageProps) {
         redirect("/sign-in");
     }
 
-    const { data: membership } = await supabase
+    const { data: membershipRaw } = await supabase
         .from("room_members")
-        .select("role,rooms!inner(slug,name)")
+        .select("role,rooms!inner(id,slug,name)")
         .eq("user_id", user.id)
         .eq("rooms.slug", slug)
         .maybeSingle();
+
+    const membership = membershipRaw as RoomSubjectsMembership | null;
 
     if (!membership) {
         redirect("/dashboard");
     }
 
-    const roomName = Array.isArray(membership.rooms) ? membership.rooms[0]?.name : (membership.rooms as any)?.name;
+    const room = getRelation(membership.rooms);
+
+    if (!room) {
+        redirect("/dashboard");
+    }
+
+    const { data: subjects } = await supabase
+        .from("subjects")
+        .select("*")
+        .eq("room_id", room.id)
+        .order("sort_order", { ascending: true });
+
+    const initialSubjects = (subjects ?? []) as Subject[];
 
     return (
         <main className="mx-auto w-full max-w-4xl p-4 sm:p-6">
-            <SubjectManager slug={slug} role={membership.role} roomName={roomName ?? "Unknown Room"} />
+            <SubjectManager
+                slug={slug}
+                role={membership.role}
+                roomName={room.name}
+                initialSubjects={initialSubjects}
+            />
         </main>
     );
 }

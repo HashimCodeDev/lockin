@@ -11,6 +11,24 @@ class RoomAccessError extends Error {
     }
 }
 
+type RoomsMembershipRow = {
+    favorite: boolean;
+    role: RoomMember["role"];
+    last_seen_at: string | null;
+    rooms:
+    | {
+        id: string;
+        slug: string;
+        name: string;
+    }
+    | {
+        id: string;
+        slug: string;
+        name: string;
+    }[]
+    | null;
+};
+
 export async function getPrimaryRoomSlug(userId: string): Promise<string | null> {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
@@ -107,17 +125,23 @@ export async function getDashboardData(userId: string, roomSlug: string): Promis
         .eq("room_id", room.id)
         .eq("user_id", userId);
 
-    const rooms = (roomsRaw ?? []).map((item: any) => {
-        const roomData = item.rooms?.[0] ?? item.rooms ?? { id: "", slug: "", name: "" };
+    const rooms = ((roomsRaw ?? []) as RoomsMembershipRow[]).flatMap((item) => {
+        const roomData = Array.isArray(item.rooms) ? item.rooms[0] : item.rooms;
 
-        return {
-            id: roomData.id,
-            slug: roomData.slug,
-            name: roomData.name,
-            favorite: item.favorite,
-            role: item.role,
-            last_seen_at: item.last_seen_at,
-        };
+        if (!roomData) {
+            return [];
+        }
+
+        return [
+            {
+                id: roomData.id,
+                slug: roomData.slug,
+                name: roomData.name,
+                favorite: item.favorite,
+                role: item.role,
+                last_seen_at: item.last_seen_at,
+            },
+        ];
     });
 
     const typedSubjects = (subjects ?? []) as Subject[];

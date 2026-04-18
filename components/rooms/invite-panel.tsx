@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Copy, Link2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,12 @@ interface InvitePanelProps {
     slug: string;
     role: RoomRole;
     roomName: string;
+    initialInviteCode: string;
+    initialInviteLink: string;
+    initialInvites: InviteRecord[];
 }
 
-interface InviteRecord {
+export interface InviteRecord {
     id: string;
     target_email: string | null;
     target_username: string | null;
@@ -24,13 +27,20 @@ interface InviteRecord {
     expires_at: string | null;
 }
 
-export function InvitePanel({ slug, role, roomName }: InvitePanelProps) {
-    const [inviteCode, setInviteCode] = useState("");
-    const [inviteLink, setInviteLink] = useState("");
+export function InvitePanel({
+    slug,
+    role,
+    roomName,
+    initialInviteCode,
+    initialInviteLink,
+    initialInvites,
+}: InvitePanelProps) {
+    const [inviteCode, setInviteCode] = useState(initialInviteCode);
+    const [inviteLink, setInviteLink] = useState(initialInviteLink);
     const [targetEmail, setTargetEmail] = useState("");
     const [targetUsername, setTargetUsername] = useState("");
     const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
-    const [invites, setInvites] = useState<InviteRecord[]>([]);
+    const [invites, setInvites] = useState<InviteRecord[]>(initialInvites);
 
     const canInvite = role === "owner" || role === "admin";
 
@@ -64,10 +74,6 @@ export function InvitePanel({ slug, role, roomName }: InvitePanelProps) {
         setInviteLink(payload.invite_link);
         setInvites(payload.invites);
     };
-
-    useEffect(() => {
-        void loadInvites();
-    }, [slug]);
 
     const sendInvite = async () => {
         const response = await fetch(`/api/rooms/${slug}/invite`, {

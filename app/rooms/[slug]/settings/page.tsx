@@ -3,6 +3,27 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
+interface RoomSettingsRelation {
+    slug: string;
+    name: string;
+    description: string | null;
+    privacy: "public" | "private" | "invite_only";
+    exam_date: string | null;
+}
+
+interface RoomSettingsMembership {
+    role: "owner" | "admin" | "member";
+    rooms: RoomSettingsRelation | RoomSettingsRelation[] | null;
+}
+
+function getRelation<T>(value: T | T[] | null | undefined): T | null {
+    if (Array.isArray(value)) {
+        return value[0] ?? null;
+    }
+
+    return value ?? null;
+}
+
 interface RoomSettingsPageProps {
     params: Promise<{ slug: string }>;
 }
@@ -20,19 +41,26 @@ export default async function RoomSettingsPage({ params }: RoomSettingsPageProps
         redirect("/sign-in");
     }
 
-    const { data: membership } = await supabase
+    const { data: membershipRaw } = await supabase
         .from("room_members")
         .select("role,rooms!inner(slug,name,description,privacy,exam_date)")
         .eq("user_id", user.id)
         .eq("rooms.slug", slug)
         .maybeSingle();
 
+    const membership = membershipRaw as RoomSettingsMembership | null;
+
     if (!membership) {
         redirect("/dashboard");
     }
 
-    const roomData = Array.isArray(membership.rooms) ? membership.rooms[0] : (membership.rooms as any);
-    const room = roomData ?? { name: "", description: null, privacy: "private", exam_date: null };
+    const room = getRelation(membership.rooms) ?? {
+        slug,
+        name: "Unknown Room",
+        description: null,
+        privacy: "private" as const,
+        exam_date: null,
+    };
 
     return (
         <main className="mx-auto w-full max-w-3xl space-y-4 p-4 sm:p-6">

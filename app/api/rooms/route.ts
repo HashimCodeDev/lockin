@@ -2,6 +2,31 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createRoomSchema } from "@/lib/validation";
 import { createClient } from "@/utils/supabase/server";
+import type { Room, RoomMember } from "@/types/app";
+
+type RoomListRow = {
+    favorite: boolean;
+    role: RoomMember["role"];
+    last_seen_at: string | null;
+    rooms:
+    | {
+        id: string;
+        slug: string;
+        name: string;
+        description: string | null;
+        privacy: Room["privacy"];
+        invite_code: string;
+    }
+    | {
+        id: string;
+        slug: string;
+        name: string;
+        description: string | null;
+        privacy: Room["privacy"];
+        invite_code: string;
+    }[]
+    | null;
+};
 
 function generateInviteCode() {
     return Math.random().toString(36).slice(2, 10).toUpperCase();
@@ -34,20 +59,26 @@ export async function GET() {
         return new NextResponse(error.message, { status: 400 });
     }
 
-    const rooms = (data ?? []).map((item: any) => {
-        const roomData = item.rooms?.[0] ?? item.rooms;
+    const rooms = ((data ?? []) as RoomListRow[]).flatMap((item) => {
+        const roomData = Array.isArray(item.rooms) ? item.rooms[0] : item.rooms;
 
-        return {
-            id: roomData.id,
-            slug: roomData.slug,
-            name: roomData.name,
-            description: roomData.description,
-            privacy: roomData.privacy,
-            invite_code: roomData.invite_code,
-            favorite: item.favorite,
-            role: item.role,
-            last_seen_at: item.last_seen_at,
-        };
+        if (!roomData) {
+            return [];
+        }
+
+        return [
+            {
+                id: roomData.id,
+                slug: roomData.slug,
+                name: roomData.name,
+                description: roomData.description,
+                privacy: roomData.privacy,
+                invite_code: roomData.invite_code,
+                favorite: item.favorite,
+                role: item.role,
+                last_seen_at: item.last_seen_at,
+            },
+        ];
     });
 
     return NextResponse.json({ rooms });

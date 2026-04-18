@@ -105,6 +105,7 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
                             roomId={data.room.id}
                             subjects={data.subjects}
                             selectedSubjectId={selectedSubjectId}
+                            onSubjectChange={setSelectedSubjectId}
                             onRefresh={refreshData}
                             activeUsers={Math.max(1, activeUsers)}
                         />
