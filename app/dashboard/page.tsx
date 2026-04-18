@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { SWRegister } from "@/components/providers/sw-register";
-import { getDashboardData } from "@/lib/dashboard-data";
+import { getPrimaryRoomSlug } from "@/lib/dashboard-data";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/utils/supabase/server";
 
@@ -32,12 +30,11 @@ export default async function DashboardPage() {
         redirect("/sign-in");
     }
 
-    const data = await getDashboardData(user.id);
+    const slug = await getPrimaryRoomSlug(user.id);
 
-    return (
-        <>
-            <SWRegister />
-            <DashboardShell data={data} currentUserId={user.id} />
-        </>
-    );
+    if (!slug) {
+        redirect("/rooms/create");
+    }
+
+    redirect(`/rooms/${slug}`);
 }

@@ -8,19 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { SUBJECTS, STORAGE_QUOTA_BYTES } from "@/lib/constants";
+import { STORAGE_QUOTA_BYTES } from "@/lib/constants";
 import { compressImageIfNeeded, hashFile, validateFileTypeAndSize } from "@/lib/upload-utils";
 import { createClient } from "@/utils/supabase/client";
-import type { Material, SubjectCode } from "@/types/app";
+import type { Material, Subject } from "@/types/app";
 
 interface VaultPanelProps {
-    selectedSubject: SubjectCode;
+    roomId: string;
+    selectedSubjectId: string | null;
+    subjects: Subject[];
     rows: Material[];
     currentUserId: string;
+    canModerate: boolean;
     onRefresh: () => Promise<void>;
 }
 
-export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: VaultPanelProps) {
+export function VaultPanel({ roomId, selectedSubjectId, subjects, rows, currentUserId, canModerate, onRefresh }: VaultPanelProps) {
     const [query, setQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
     const [isUploading, setIsUploading] = useState(false);
@@ -31,13 +34,13 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
     const filteredRows = useMemo(
         () =>
             rows.filter((item) => {
-                const matchesSubject = item.subject_code === selectedSubject;
+                const matchesSubject = selectedSubjectId ? item.subject_id === selectedSubjectId : true;
                 const matchesQuery = item.file_name.toLowerCase().includes(query.toLowerCase());
                 const ext = item.file_name.split(".").pop()?.toLowerCase() ?? "";
                 const matchesType = typeFilter === "all" ? true : ext === typeFilter;
                 return matchesSubject && matchesQuery && matchesType;
             }),
-        [query, rows, selectedSubject, typeFilter],
+        [query, rows, selectedSubjectId, typeFilter],
     );
 
     const uploadFiles = async (fileList: FileList | null) => {
@@ -70,7 +73,8 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        subject_code: selectedSubject,
+                        room_id: roomId,
+                        subject_id: selectedSubjectId,
                         file_name: file.name,
                         file_size: file.size,
                         file_type: file.type,
@@ -84,7 +88,7 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
                     continue;
                 }
 
-                const path = `${selectedSubject}/${user.id}/${Date.now()}-${file.name}`;
+                const path = `materials/${roomId}/${user.id}/${Date.now()}-${file.name}`;
                 const { error } = await supabase.storage.from("materials").upload(path, file, {
                     cacheControl: "3600",
                     upsert: false,
@@ -101,7 +105,8 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        subject_code: selectedSubject,
+                        room_id: roomId,
+                        subject_id: selectedSubjectId,
                         file_name: file.name,
                         file_size: file.size,
                         file_url: data.publicUrl,
@@ -126,7 +131,7 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
 
     const deleteMaterial = async (item: Material) => {
         try {
-            const response = await fetch(`/api/materials?id=${item.id}`, { method: "DELETE" });
+            const response = await fetch(`/api/materials?id=${item.id}&room_id=${roomId}`, { method: "DELETE" });
             if (!response.ok) {
                 toast.error("Unable to delete file.");
                 return;
@@ -142,7 +147,7 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
         const response = await fetch("/api/materials", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: item.id, pinned: !item.pinned }),
+            body: JSON.stringify({ id: item.id, room_id: roomId, pinned: !item.pinned }),
         });
 
         if (!response.ok) {
@@ -224,7 +229,7 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
                                 <div>
                                     <p className="text-sm font-semibold text-foreground">{item.file_name}</p>
                                     <p className="text-xs text-muted">
-                                        {Math.round(item.file_size / 1024)} KB • {SUBJECTS.find((s) => s.code === item.subject_code)?.label}
+                                        {Math.round(item.file_size / 1024)} KB • {subjects.find((s) => s.id === item.subject_id)?.name ?? "Uncategorized"}
                                     </p>
                                     <p className="text-xs text-muted">
                                         {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
@@ -239,7 +244,7 @@ export function VaultPanel({ selectedSubject, rows, currentUserId, onRefresh }: 
                                             <Download className="h-4 w-4" />
                                         </Button>
                                     </a>
-                                    {item.uploaded_by === currentUserId && (
+                                    {(item.uploaded_by === currentUserId || canModerate) && (
                                         <Button size="icon" variant="ghost" onClick={() => void deleteMaterial(item)}>
                                             <Trash2 className="h-4 w-4 text-danger" />
                                         </Button>

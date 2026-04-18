@@ -16,10 +16,8 @@ import { AccountabilityPanel } from "@/components/dashboard/accountability-panel
 import { NotificationsPanel } from "@/components/dashboard/notifications-panel";
 import { GamificationPanel } from "@/components/dashboard/gamification-panel";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
-import { SUBJECTS } from "@/lib/constants";
 import { usePresence } from "@/hooks/use-presence";
 import { createClient } from "@/utils/supabase/client";
-import type { SubjectCode } from "@/types/app";
 import type { DashboardData } from "@/types/dashboard";
 
 interface DashboardShellProps {
@@ -30,11 +28,12 @@ interface DashboardShellProps {
 export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const [selectedSubject, setSelectedSubject] = useState<SubjectCode>(SUBJECTS[0].code);
+    const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(data.subjects[0]?.id ?? null);
     const [mobileTab, setMobileTab] = useState<"overview" | "tracker" | "analytics" | "vault">("overview");
-    const { activeUsers } = usePresence(currentUserId);
+    const { activeUsers } = usePresence(data.room.id, currentUserId);
 
     const profile = data.profile;
+    const canModerate = data.membership.role === "owner" || data.membership.role === "admin";
 
     const notifications = useMemo(
         () => [
@@ -60,6 +59,9 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
         [],
     );
 
+    const totalXp = data.logs.reduce((total, log) => total + log.duration_minutes * 2, 0);
+    const streakDays = new Set(data.logs.map((log) => log.created_at.slice(0, 10))).size;
+
     const refreshData = async () => {
         startTransition(() => {
             router.refresh();
@@ -77,21 +79,32 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
 
     return (
         <div className="grid-overlay min-h-screen pb-20 lg:pb-6">
-            <Navbar username={profile?.username ?? "Cadet"} onSignOut={onSignOut} />
-            <CountdownHeader />
+            <Navbar
+                username={profile?.username ?? "Cadet"}
+                currentRoomSlug={data.room.slug}
+                currentRoomName={data.room.name}
+                rooms={data.rooms}
+                onSwitchRoom={(slug) => router.push(`/rooms/${slug}`)}
+                onCreateRoom={() => router.push("/rooms/create")}
+                onInviteFriends={() => router.push(`/rooms/${data.room.slug}/invite`)}
+                onSignOut={onSignOut}
+            />
+            <CountdownHeader examDate={data.room.exam_date} roomName={data.room.name} />
 
             <main className="mx-auto flex w-full max-w-400 gap-4 px-4 py-4 sm:px-6">
-                <SubjectNavigator selected={selectedSubject} onSelect={setSelectedSubject} />
+                <SubjectNavigator subjects={data.subjects} selected={selectedSubjectId} onSelect={setSelectedSubjectId} />
 
                 <section className="flex-1 space-y-4">
                     <div className="rounded-lg border border-line bg-card p-3 text-sm text-muted">
-                        Active subject filter: <span className="text-foreground">{selectedSubject}</span>
+                        Active subject filter: <span className="text-foreground">{data.subjects.find((subject) => subject.id === selectedSubjectId)?.name ?? "All Subjects"}</span>
                         {isPending && <span className="ml-2 text-primary">Syncing...</span>}
                     </div>
 
                     {(mobileTab === "overview" || mobileTab === "tracker") && (
                         <LiveStudyTracker
-                            selectedSubject={selectedSubject}
+                            roomId={data.room.id}
+                            subjects={data.subjects}
+                            selectedSubjectId={selectedSubjectId}
                             onRefresh={refreshData}
                             activeUsers={Math.max(1, activeUsers)}
                         />
@@ -107,9 +120,12 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
 
                     {(mobileTab === "overview" || mobileTab === "vault") && (
                         <VaultPanel
-                            selectedSubject={selectedSubject}
+                            roomId={data.room.id}
+                            selectedSubjectId={selectedSubjectId}
+                            subjects={data.subjects}
                             rows={data.materials}
                             currentUserId={currentUserId}
+                            canModerate={canModerate}
                             onRefresh={refreshData}
                         />
                     )}
@@ -118,8 +134,8 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
                 <aside className="hidden w-87.5 shrink-0 space-y-4 xl:block">
                     <LeaderboardCard rows={data.leaderboard} currentUserId={currentUserId} />
                     <GamificationPanel
-                        totalXp={profile?.total_xp ?? 0}
-                        streakDays={profile?.streak_days ?? 0}
+                        totalXp={totalXp}
+                        streakDays={streakDays}
                         weeklyMinutes={data.weeklyMinutes}
                     />
                     <FocusTools />
@@ -138,8 +154,8 @@ export function DashboardShell({ data, currentUserId }: DashboardShellProps) {
             <div className="space-y-4 px-4 pb-24 xl:hidden">
                 <LeaderboardCard rows={data.leaderboard} currentUserId={currentUserId} />
                 <GamificationPanel
-                    totalXp={profile?.total_xp ?? 0}
-                    streakDays={profile?.streak_days ?? 0}
+                    totalXp={totalXp}
+                    streakDays={streakDays}
                     weeklyMinutes={data.weeklyMinutes}
                 />
                 <FocusTools />

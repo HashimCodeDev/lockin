@@ -1,24 +1,52 @@
-export type SubjectCode =
-    | "GAMAT401"
-    | "PCCST402"
-    | "PCCST403"
-    | "PBCST404"
-    | "PECCT41N"
-    | "UCHUT346";
+export type RoomPrivacy = "public" | "private" | "invite_only";
+export type RoomRole = "owner" | "admin" | "member";
 
 export interface Profile {
     id: string;
     username: string;
     avatar_url: string | null;
-    total_xp: number;
-    streak_days: number;
     created_at: string;
+}
+
+export interface Room {
+    id: string;
+    owner_id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    exam_date: string | null;
+    privacy: RoomPrivacy;
+    invite_code: string;
+    banner_url: string | null;
+    icon: string | null;
+    created_at: string;
+}
+
+export interface RoomMember {
+    id: string;
+    room_id: string;
+    user_id: string;
+    role: RoomRole;
+    favorite: boolean;
+    joined_at: string;
+    last_seen_at: string | null;
+}
+
+export interface Subject {
+    id: string;
+    room_id: string;
+    name: string;
+    code: string;
+    color: string;
+    icon: string | null;
+    sort_order: number;
 }
 
 export interface StudyLog {
     id: string;
+    room_id: string;
     user_id: string;
-    subject_code: SubjectCode;
+    subject_id: string | null;
     duration_minutes: number;
     notes: string | null;
     created_at: string;
@@ -26,17 +54,12 @@ export interface StudyLog {
 
 export interface Material {
     id: string;
+    room_id: string;
     uploaded_by: string;
-    subject_code: SubjectCode;
+    subject_id: string | null;
     file_url: string;
     file_name: string;
     file_size: number;
     pinned: boolean;
     created_at: string;
-}
-
-export interface Mission {
-    id: string;
-    title: string;
-    xp_reward: number;
 }

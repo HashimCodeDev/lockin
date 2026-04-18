@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertTriangle, Timer } from "lucide-react";
-import { EXAM_DATE } from "@/lib/constants";
 import { useCountdown } from "@/hooks/use-countdown";
 
 function TimeCell({ label, value }: { label: string; value: number }) {
@@ -13,8 +12,14 @@ function TimeCell({ label, value }: { label: string; value: number }) {
     );
 }
 
-export function CountdownHeader() {
-    const { days, hours, minutes, seconds, isUrgent } = useCountdown(EXAM_DATE);
+interface CountdownHeaderProps {
+    examDate: string | null;
+    roomName: string;
+}
+
+export function CountdownHeader({ examDate, roomName }: CountdownHeaderProps) {
+    const targetDate = examDate ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { days, hours, minutes, seconds, isUrgent } = useCountdown(targetDate);
 
     return (
         <section className="sticky top-15.25 z-30 border-b border-line bg-background/95 py-3 backdrop-blur">
@@ -22,7 +27,7 @@ export function CountdownHeader() {
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted sm:text-sm">
                         <Timer className="h-4 w-4 text-primary" />
-                        April 27, 2026 Mission Deadline
+                        {roomName} Countdown Target
                     </div>
                     {isUrgent && (
                         <span className="animate-pulse rounded-md border border-danger/60 bg-danger/10 px-2 py-1 text-xs font-semibold text-danger">

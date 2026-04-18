@@ -47,10 +47,10 @@ export function LeaderboardCard({ rows, currentUserId }: LeaderboardCardProps) {
                                 </div>
                                 <div className="mt-2 flex items-center gap-3 text-xs text-muted">
                                     <span className="inline-flex items-center gap-1">
-                                        <Medal className="h-3.5 w-3.5 text-primary" /> XP {entry.total_xp}
+                                        <Medal className="h-3.5 w-3.5 text-primary" /> Sessions {entry.sessions_count}
                                     </span>
                                     <span className="inline-flex items-center gap-1">
-                                        <Flame className="h-3.5 w-3.5 text-danger" /> {entry.streak_days}d streak
+                                        <Flame className="h-3.5 w-3.5 text-danger" /> {Math.round(hours)}h momentum
                                     </span>
                                 </div>
                             </div>

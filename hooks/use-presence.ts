@@ -3,15 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-export function usePresence(userId?: string) {
+export function usePresence(roomId?: string, userId?: string) {
     const [activeUsers, setActiveUsers] = useState(0);
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId || !roomId) return;
 
         let isMounted = true;
         const client = createClient();
-        const channel = client.channel("study-presence", {
+        const channel = client.channel(`study-presence:${roomId}`, {
             config: {
                 presence: {
                     key: userId,
@@ -40,7 +40,7 @@ export function usePresence(userId?: string) {
             isMounted = false;
             void client.removeChannel(channel);
         };
-    }, [userId]);
+    }, [roomId, userId]);
 
     return useMemo(() => ({ activeUsers }), [activeUsers]);
 }

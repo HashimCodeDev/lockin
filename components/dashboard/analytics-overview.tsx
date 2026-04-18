@@ -5,7 +5,6 @@ import { Area, AreaChart, CartesianGrid, Pie, PieChart, ResponsiveContainer, Too
 import { Clock3, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { SUBJECTS } from "@/lib/constants";
 import type { DailyStat, SubjectStat } from "@/types/dashboard";
 
 interface AnalyticsOverviewProps {
@@ -24,7 +23,8 @@ export function AnalyticsOverview({
     const pieData = useMemo(
         () =>
             subjectStats.map((item) => ({
-                name: SUBJECTS.find((subject) => subject.code === item.subject_code)?.label ?? item.subject_code,
+                name: item.subject_name,
+                color: item.color,
                 value: item.minutes,
             })),
         [subjectStats],

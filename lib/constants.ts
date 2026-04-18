@@ -1,14 +1,3 @@
-export const EXAM_DATE = "2026-04-27T00:00:00+05:30";
-
-export const SUBJECTS = [
-    { code: "GAMAT401", label: "MATHS" },
-    { code: "PCCST402", label: "DBMS" },
-    { code: "PCCST403", label: "OS" },
-    { code: "PBCST404", label: "COA" },
-    { code: "PECCT41N", label: "PE-1" },
-    { code: "UCHUT346", label: "EE / ETHICS" },
-] as const;
-
 export const ALLOWED_UPLOAD_TYPES = [
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

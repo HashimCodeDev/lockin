@@ -1,33 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Play, Pause, Square, ShieldAlert, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SUBJECTS } from "@/lib/constants";
 import { studySessionSchema } from "@/lib/validation";
 import { useStopwatch } from "@/hooks/use-stopwatch";
 import { createClient } from "@/utils/supabase/client";
-import type { SubjectCode } from "@/types/app";
+import type { Subject } from "@/types/app";
 
 const XP_PER_MINUTE = 2;
 
 interface LiveStudyTrackerProps {
-    selectedSubject: SubjectCode;
+    roomId: string;
+    subjects: Subject[];
+    selectedSubjectId: string | null;
     onRefresh: () => Promise<void>;
     activeUsers: number;
 }
 
-export function LiveStudyTracker({ selectedSubject, onRefresh, activeUsers }: LiveStudyTrackerProps) {
+export function LiveStudyTracker({ roomId, subjects, selectedSubjectId, onRefresh, activeUsers }: LiveStudyTrackerProps) {
     const timer = useStopwatch();
     const [notes, setNotes] = useState("");
     const [goal, setGoal] = useState("");
-    const [subject, setSubject] = useState<SubjectCode>(selectedSubject);
+    const [subjectId, setSubjectId] = useState<string | null>(selectedSubjectId);
     const [isSaving, setIsSaving] = useState(false);
 
-    const isValidSubject = SUBJECTS.some((item) => item.code === subject);
+    useEffect(() => {
+        setSubjectId(selectedSubjectId);
+    }, [selectedSubjectId]);
+
+    const isValidSubject = !subjectId || subjects.some((item) => item.id === subjectId);
     const expectedXp = useMemo(
         () => Math.floor(timer.elapsedMs / 1000 / 60) * XP_PER_MINUTE,
         [timer.elapsedMs],
@@ -38,7 +43,8 @@ export function LiveStudyTracker({ selectedSubject, onRefresh, activeUsers }: Li
 
         const minutes = Math.max(1, Math.round(timer.stop() / 1000 / 60));
         const parsed = studySessionSchema.safeParse({
-            subject_code: subject,
+            room_id: roomId,
+            subject_id: subjectId,
             duration_minutes: minutes,
             notes,
             goal,
@@ -63,8 +69,9 @@ export function LiveStudyTracker({ selectedSubject, onRefresh, activeUsers }: Li
             }
 
             const { error: insertError } = await supabase.from("study_logs").insert({
+                room_id: roomId,
                 user_id: user.id,
-                subject_code: parsed.data.subject_code,
+                subject_id: parsed.data.subject_id,
                 duration_minutes: parsed.data.duration_minutes,
                 notes: parsed.data.notes ?? null,
             });
@@ -75,12 +82,7 @@ export function LiveStudyTracker({ selectedSubject, onRefresh, activeUsers }: Li
             }
 
             const gainedXp = parsed.data.duration_minutes * XP_PER_MINUTE;
-            await supabase.rpc("increment_profile_xp", {
-                profile_id: user.id,
-                xp_delta: gainedXp,
-            });
-
-            toast.success(`Session saved. +${gainedXp} XP secured.`);
+            toast.success(`Session saved. ${gainedXp} focus points earned.`);
             setNotes("");
             setGoal("");
             await onRefresh();
@@ -119,13 +121,14 @@ export function LiveStudyTracker({ selectedSubject, onRefresh, activeUsers }: Li
                         <label className="space-y-1">
                             <span className="text-xs uppercase tracking-wide text-muted">Subject</span>
                             <select
-                                value={subject}
-                                onChange={(event) => setSubject(event.target.value as SubjectCode)}
+                                value={subjectId ?? ""}
+                                onChange={(event) => setSubjectId(event.target.value || null)}
                                 className="h-10 w-full rounded-lg border border-line bg-black/40 px-3 text-sm"
                             >
-                                {SUBJECTS.map((item) => (
-                                    <option key={item.code} value={item.code}>
-                                        {item.label} ({item.code})
+                                <option value="">Uncategorized</option>
+                                {subjects.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name} ({item.code})
                                     </option>
                                 ))}
                             </select>
