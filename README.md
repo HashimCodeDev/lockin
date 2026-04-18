@@ -29,6 +29,21 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
+### Google Auth Setup
+
+To enable Google sign-in/sign-up:
+
+1. In Supabase Dashboard, go to **Authentication > Providers > Google** and enable it.
+2. Add your Google OAuth client credentials there.
+3. In Supabase **Authentication > URL Configuration**, add your callback URL(s):
+
+```bash
+http://localhost:3000/auth/callback
+https://your-production-domain.com/auth/callback
+```
+
+4. In Google Cloud Console, make sure the same callback URL(s) are listed under authorized redirect URIs.
+
 ### Database Setup
 
 1. Create a Supabase project at https://supabase.com
