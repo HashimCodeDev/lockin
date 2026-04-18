@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SWRegister } from "@/components/providers/sw-register";
 import { getDashboardData, isRoomAccessError } from "@/lib/dashboard-data";
@@ -12,6 +13,7 @@ interface RoomPageProps {
 
 export default async function RoomDashboardPage({ params }: RoomPageProps) {
     const { slug } = await params;
+    await connection();
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
