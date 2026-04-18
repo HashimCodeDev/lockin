@@ -1,34 +1,12 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { updateSession } from "@/supabase/middleware";
-
-const PROTECTED = ["/dashboard"];
-const AUTH_ONLY = ["/sign-in", "/sign-up"];
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-    const { response, user } = await updateSession(request);
-
-    const isProtectedRoute = PROTECTED.some((route) =>
-        request.nextUrl.pathname.startsWith(route),
-    );
-    const isAuthRoute = AUTH_ONLY.some((route) =>
-        request.nextUrl.pathname.startsWith(route),
-    );
-
-    if (isProtectedRoute && !user) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/sign-in";
-        return NextResponse.redirect(url);
-    }
-
-    if (isAuthRoute && user) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/dashboard";
-        return NextResponse.redirect(url);
-    }
-
-    return response;
+  return await updateSession(request);
 }
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/sign-in", "/sign-up"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
