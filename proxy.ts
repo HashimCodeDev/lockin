@@ -1,7 +1,15 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
+    if (request.nextUrl.pathname.startsWith("/auth/callback")) {
+        return NextResponse.next({
+            request: {
+                headers: request.headers,
+            },
+        });
+    }
+
     return await updateSession(request);
 }
 

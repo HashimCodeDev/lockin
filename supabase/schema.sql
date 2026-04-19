@@ -115,13 +115,58 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  base_username text;
+  candidate_username text;
+  avatar text;
+  attempt int := 0;
 begin
-  insert into public.profiles (id, username)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data ->> 'username', split_part(new.email, '@', 1))
-  )
-  on conflict (id) do nothing;
+  base_username := coalesce(
+    nullif(trim(new.raw_user_meta_data ->> 'username'), ''),
+    split_part(coalesce(new.email, ''), '@', 1),
+    'user'
+  );
+
+  base_username := lower(regexp_replace(base_username, '[^a-z0-9_]+', '', 'g'));
+  if base_username = '' then
+    base_username := 'user';
+  end if;
+  base_username := left(base_username, 24);
+
+  avatar := coalesce(
+    nullif(trim(new.raw_user_meta_data ->> 'avatar_url'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'picture'), ''),
+    null
+  );
+
+  loop
+    candidate_username :=
+      case
+        when attempt = 0 then base_username
+        else left(base_username, greatest(1, 24 - length(attempt::text) - 1)) || '_' || attempt::text
+      end;
+
+    begin
+      insert into public.profiles (id, username, avatar_url)
+      values (new.id, candidate_username, avatar)
+      on conflict (id) do update
+      set
+        username = coalesce(public.profiles.username, excluded.username),
+        avatar_url = coalesce(public.profiles.avatar_url, excluded.avatar_url);
+
+      exit;
+    exception
+      when unique_violation then
+        if exists (select 1 from public.profiles where id = new.id) then
+          exit;
+        end if;
+
+        attempt := attempt + 1;
+        if attempt > 50 then
+          raise;
+        end if;
+    end;
+  end loop;
 
   return new;
 end;
@@ -131,6 +176,26 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
+
+insert into public.profiles (id, username, avatar_url)
+select
+  u.id,
+  left(
+    coalesce(
+      nullif(lower(regexp_replace(coalesce(nullif(trim(u.raw_user_meta_data ->> 'username'), ''), split_part(coalesce(u.email, ''), '@', 1), 'user'), '[^a-z0-9_]+', '', 'g')), ''),
+      'user'
+    ),
+    18
+  ) || '_' || substr(replace(u.id::text, '-', ''), 1, 12),
+  coalesce(
+    nullif(trim(u.raw_user_meta_data ->> 'avatar_url'), ''),
+    nullif(trim(u.raw_user_meta_data ->> 'picture'), ''),
+    null
+  )
+from auth.users u
+left join public.profiles p on p.id = u.id
+where p.id is null
+on conflict (id) do nothing;
 
 create or replace function public.is_room_member(target_room_id uuid)
 returns boolean
@@ -160,6 +225,21 @@ as $$
     where rm.room_id = target_room_id
       and rm.user_id = auth.uid()
       and rm.role = any(roles)
+  );
+$$;
+
+create or replace function public.is_room_owner(target_room_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.rooms r
+    where r.id = target_room_id
+      and r.owner_id = auth.uid()
   );
 $$;
 
@@ -228,11 +308,18 @@ to authenticated
 using (auth.uid() = id)
 with check (auth.uid() = id);
 
+create policy "profiles_insert_own"
+on public.profiles
+for insert
+to authenticated
+with check (auth.uid() = id);
+
+drop policy if exists "rooms_select_member_or_public" on public.rooms;
 create policy "rooms_select_member_or_public"
 on public.rooms
 for select
 to authenticated
-using (privacy = 'public' or public.is_room_member(id));
+using (privacy = 'public' or public.is_room_member(id) or public.is_room_owner(id));
 
 create policy "rooms_insert_owner"
 on public.rooms
@@ -244,14 +331,14 @@ create policy "rooms_update_admin"
 on public.rooms
 for update
 to authenticated
-using (public.has_room_role(id, array['owner', 'admin']))
-with check (public.has_room_role(id, array['owner', 'admin']));
+using (owner_id = auth.uid() or public.has_room_role(id, array['owner', 'admin']))
+with check (owner_id = auth.uid() or public.has_room_role(id, array['owner', 'admin']));
 
 create policy "rooms_delete_owner"
 on public.rooms
 for delete
 to authenticated
-using (public.has_room_role(id, array['owner']));
+using (owner_id = auth.uid() or public.has_room_role(id, array['owner']));
 
 create policy "room_members_select_members"
 on public.room_members
@@ -259,11 +346,19 @@ for select
 to authenticated
 using (public.is_room_member(room_id));
 
+drop policy if exists "room_members_insert_admin_or_owner" on public.room_members;
 create policy "room_members_insert_admin_or_owner"
 on public.room_members
 for insert
 to authenticated
-with check (public.has_room_role(room_id, array['owner', 'admin']));
+with check (
+  public.has_room_role(room_id, array['owner', 'admin'])
+  or (
+    public.is_room_owner(room_id)
+    and auth.uid() = user_id
+    and role = 'owner'
+  )
+);
 
 create policy "room_members_update_owner_admin"
 on public.room_members

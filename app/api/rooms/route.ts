@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { createRoomSchema } from "@/lib/validation";
+import { ensureProfileExists } from "@/lib/profile-bootstrap";
 import { createClient } from "@/utils/supabase/server";
 import type { Room, RoomMember } from "@/types/app";
 
@@ -37,15 +39,46 @@ async function requireUser() {
     const supabase = createClient(cookieStore);
     const {
         data: { user },
+        error,
     } = await supabase.auth.getUser();
-    return { supabase, user };
+
+    return { supabase, user, authError: error };
+}
+
+function mapDatabaseError(error: PostgrestError | null, fallbackMessage: string) {
+    if (!error) {
+        return { status: 400, message: fallbackMessage };
+    }
+
+    if (error.code === "42501") {
+        return {
+            status: 403,
+            message: "Database policy blocked this action. Ensure your session is valid and schema policies are up to date.",
+        };
+    }
+
+    if (error.code === "23503") {
+        return {
+            status: 400,
+            message: "Profile mapping is missing for this account. Please sign out and sign in again.",
+        };
+    }
+
+    if (error.code === "23505") {
+        return {
+            status: 409,
+            message: "Room slug or invite code is already in use. Please retry.",
+        };
+    }
+
+    return { status: 400, message: error.message || fallbackMessage };
 }
 
 export async function GET() {
-    const { supabase, user } = await requireUser();
+    const { supabase, user, authError } = await requireUser();
 
     if (!user) {
-        return new NextResponse("Unauthorized", { status: 401 });
+        return new NextResponse(authError?.message ?? "Unauthorized", { status: 401 });
     }
 
     const { data, error } = await supabase
@@ -85,10 +118,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const { supabase, user } = await requireUser();
+    const { supabase, user, authError } = await requireUser();
 
     if (!user) {
-        return new NextResponse("Unauthorized", { status: 401 });
+        return new NextResponse(authError?.message ?? "Unauthorized", { status: 401 });
+    }
+
+    const ensuredProfile = await ensureProfileExists(supabase, user);
+
+    if (!ensuredProfile.ok) {
+        return new NextResponse(ensuredProfile.message, { status: ensuredProfile.status });
     }
 
     const payload = await request.json();
@@ -115,7 +154,8 @@ export async function POST(request: Request) {
     const { data: room, error: roomError } = await supabase.from("rooms").insert(roomData).select("*").single();
 
     if (roomError || !room) {
-        return new NextResponse(roomError?.message ?? "Unable to create room", { status: 400 });
+        const mapped = mapDatabaseError(roomError, "Unable to create room");
+        return new NextResponse(mapped.message, { status: mapped.status });
     }
 
     const { error: memberError } = await supabase.from("room_members").insert({
@@ -127,7 +167,9 @@ export async function POST(request: Request) {
     });
 
     if (memberError) {
-        return new NextResponse(memberError.message, { status: 400 });
+        await supabase.from("rooms").delete().eq("id", room.id);
+        const mapped = mapDatabaseError(memberError, "Unable to register room owner");
+        return new NextResponse(mapped.message, { status: mapped.status });
     }
 
     const defaultSubjects = [
@@ -145,7 +187,9 @@ export async function POST(request: Request) {
     );
 
     if (subjectError) {
-        return new NextResponse(subjectError.message, { status: 400 });
+        await supabase.from("rooms").delete().eq("id", room.id);
+        const mapped = mapDatabaseError(subjectError, "Unable to create default subjects");
+        return new NextResponse(mapped.message, { status: mapped.status });
     }
 
     return NextResponse.json({ room });

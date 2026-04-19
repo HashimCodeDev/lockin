@@ -43,7 +43,9 @@ export function AuthForm({ mode }: AuthFormProps) {
         }
 
         if (searchParams.get("error") === "google_oauth_failed") {
-            toast.error("Google sign in failed. Please try again.");
+            const reason = searchParams.get("reason");
+            const message = reason ? `Google sign in failed: ${reason}` : "Google sign in failed. Please try again.";
+            toast.error(message);
             oauthErrorHandledRef.current = true;
         }
     }, [searchParams]);
